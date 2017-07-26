@@ -1,5 +1,11 @@
+
 #include <Adafruit_NeoPixel.h>
 #include <Time.h>
+
+extern "C"
+{
+  #include "color.h"
+}
 
 #define PIN 17
 
@@ -17,7 +23,9 @@ void setup() {
   strip.begin();
   // Initialize all pixels to 'off'
   strip.show();
-  strip.setBrightness(32);
+  strip.setBrightness(64);
+
+  setTime(5, 10, 0, 0, 0, 0);
 }
 
 void loop() {
@@ -30,7 +38,7 @@ void loop() {
   // Show time on LEDs
   display_time(now());
   //delay(1000);
-  delay(100);
+  delay(20);
 }
 
 void display_time(time_t time)
@@ -41,8 +49,36 @@ void display_time(time_t time)
     uint8_t hour_bit = (hour(time)   >> i) & 0x1;
     uint8_t min_bit  = (minute(time) >> i) & 0x1;
     uint8_t sec_bit  = (second(time) >> i) & 0x1;
-    strip.setPixelColor(i, 255*hour_bit, 255*min_bit, 255*sec_bit);
+    struct color pixel_color = {0};
+    if (hour_bit)
+    {
+      pixel_color = add_colors(pixel_color, color_yellow);
+    }
+    if (min_bit)
+    {
+      pixel_color = add_colors(pixel_color, color_orange);
+    }
+    /*
+    if (sec_bit)
+    {
+      pixel_color = add_colors(pixel_color, color_red);
+    }
+    */
+    //strip.setPixelColor(i, 255*hour_bit, 255*min_bit, 255*sec_bit);
+    strip.setPixelColor(i, pixel_color.red, pixel_color.green, pixel_color.blue);
   }
+
+  // Use LEDs 6 and 7 for seconds
+  if (second(time) & 0x8)
+    strip.setPixelColor(6, color_red.red, color_red.green, color_red.blue);
+  else
+    strip.setPixelColor(6, 0, 0, 0);
+
+  if (second(time) & 0x10)
+    strip.setPixelColor(7, color_red.red, color_red.green, color_red.blue);
+  else
+    strip.setPixelColor(7, 0, 0, 0);
+
   strip.show();
 }
 
