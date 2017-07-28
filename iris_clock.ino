@@ -1,13 +1,23 @@
 
 #include <Adafruit_NeoPixel.h>
 #include <Time.h>
+#include <TimerOne.h>
 
 extern "C"
 {
   #include "color.h"
+  #include "button.h"
 }
 
 #define PIN 17
+uint8_t brightness;
+
+#define BUTTON_PIN 11
+struct button in_button;
+void button_int(void)
+{
+  button_update(&in_button, !digitalRead(BUTTON_PIN));
+}
 
 // Parameter 1 = number of pixels in strip
 // Parameter 2 = Arduino pin number (most are valid)
@@ -20,12 +30,21 @@ extern "C"
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(8, PIN, NEO_GRB + NEO_KHZ800);
 
 void setup() {
+  Serial.begin(115200);
+
   strip.begin();
   // Initialize all pixels to 'off'
   strip.show();
-  strip.setBrightness(64);
+  brightness = 64;
+  strip.setBrightness(brightness);
+
+  // Set interrupt for 1 ms
+  Timer1.initialize(1000);
+  Timer1.attachInterrupt(button_int, 1000);
 
   setTime(5, 10, 0, 0, 0, 0);
+  pinMode(BUTTON_PIN, INPUT);
+  button_init(&in_button);
 }
 
 void loop() {
@@ -39,6 +58,14 @@ void loop() {
   display_time(now());
   //delay(1000);
   delay(20);
+  //Serial.println(in_button.integrate);
+
+  if (button_was_pressed(&in_button))
+  {
+    brightness = (brightness + 63) & 0xFF;
+    strip.setBrightness(brightness);
+    Serial.println(brightness);
+  }
 }
 
 void display_time(time_t time)
