@@ -7,16 +7,14 @@ extern "C"
 {
   #include "color.h"
   #include "button.h"
+  #include "smoothing.h"
 }
 
 // Analog sensor hooked to Teensy LC pin 14
 #define LIGHT_ANALOG_PIN    (A0)
-#define LIGHT_NUM_READS     16
-uint32_t analog_reads[LIGHT_NUM_READS] = {0};
-size_t   analog_ind = 0;
-int light_sensor_read(void);
-int light_sensor_done(void);
-float light_sensor_average(void);
+#define LIGHT_FILT_ALPHA    ((float)0.01)
+struct exponential_filter light_filt = {0};
+float light_sensor_update(void);
 
 #define BUTTON_PIN          11
 struct button in_button;
@@ -55,6 +53,8 @@ void setup()
   pinMode(BUTTON_PIN, INPUT);
   button_init(&in_button);
   pinMode(LIGHT_ANALOG_PIN, INPUT);
+
+  exponential_filter_init(&light_filt, LIGHT_FILT_ALPHA);
 }
 
 void loop()
@@ -78,24 +78,15 @@ void loop()
     //Serial.println(brightness);
   }
 
-  light_sensor_read();
-  if (light_sensor_done())
-  {
-    float light_sense = light_sensor_average();
-    if (light_sense >= 650.0f)
-    {
-      light_sense = 650.0f;
-    }
-    float light_ratio = light_sense / 650.0f;
-    int out_brightness = (int)((float)brightness * light_ratio);
-    strip.setBrightness(out_brightness);
+  float light_ratio = light_sensor_update();
+  int out_brightness = (int)((float)brightness * light_ratio);
+  strip.setBrightness(out_brightness);
 
-    Serial.print("(Light sensor, Brightness): (");
-    Serial.print(light_sense);
-    Serial.print(", ");
-    Serial.print(out_brightness);
-    Serial.println(")");
-  }
+  Serial.print("(Light sensor, Brightness): (");
+  Serial.print(light_val);
+  Serial.print(", ");
+  Serial.print(out_brightness);
+  Serial.println(")");
 }
 
 void display_time(time_t time)
@@ -179,27 +170,15 @@ uint32_t Wheel(byte WheelPos) {
   return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
 }
 
-int light_sensor_read(void)
+int light_sensor_update(void)
 {
-  analog_reads[analog_ind] = analogRead(LIGHT_ANALOG_PIN);
-  //Serial.println(analog_reads[analog_ind]);
-  analog_ind++;
-}
-
-int light_sensor_done(void)
-{
-  return analog_ind >= LIGHT_NUM_READS;
-}
-
-float light_sensor_average(void)
-{
-  uint32_t sum = 0;
-  for (analog_ind = 0; analog_ind < LIGHT_NUM_READS; analog_ind++)
+  exponential_filter_update(&light_filt, analogRead(LIGHT_ANALOG_PIN));
+  //Serial.println(light_filt.value);
+  float light_val = light_filt.value;
+  if (light_val >= 650.0f)
   {
-    sum += analog_reads[analog_ind];
+    light_val = 650.0f;
   }
-  float avg = (float)sum / LIGHT_NUM_READS;
-  analog_ind = 0;
-  return avg;
+  return light_val / 650.0f;
 }
 
