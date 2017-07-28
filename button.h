@@ -3,9 +3,9 @@
 
 struct button
 {
-  int integrate;
-  int state;
-  int pressed;
+    int integrate;
+    int state;
+    int pressed;
 };
 
 void button_init(struct button *b);

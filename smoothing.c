@@ -23,8 +23,8 @@ int exponential_filter_init(struct exponential_filter *filt,
     filt->one_sub_alpha = 1.0f - alpha;
 }
 
-void exponential_filter_update(struct exponential_filter *filt,
-                               float  new_val)
+int exponential_filter_update(struct exponential_filter *filt,
+                              float  new_val)
 {
     filt->value = (filt->one_sub_alpha * filt->value) +
                   (filt->alpha         * new_val);
