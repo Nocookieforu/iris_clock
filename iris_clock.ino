@@ -79,11 +79,11 @@ void display_time(time_t time)
     struct color pixel_color = {0};
     if (hour_bit)
     {
-      pixel_color = add_colors(pixel_color, color_yellow);
+      pixel_color = add_colors(pixel_color, color_blue);
     }
     if (min_bit)
     {
-      pixel_color = add_colors(pixel_color, color_orange);
+      pixel_color = add_colors(pixel_color, color_green);
     }
     /*
     if (sec_bit)
