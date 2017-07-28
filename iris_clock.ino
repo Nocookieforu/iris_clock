@@ -1,6 +1,6 @@
 
 #include <Adafruit_NeoPixel.h>
-#include <Time.h>
+#include <TimeLib.h>
 #include <TimerOne.h>
 
 extern "C"
@@ -9,15 +9,24 @@ extern "C"
   #include "button.h"
 }
 
-#define PIN 17
-uint8_t brightness;
+// Analog sensor hooked to Teensy LC pin 14
+#define LIGHT_ANALOG_PIN    (A0)
+#define LIGHT_NUM_READS     16
+uint32_t analog_reads[LIGHT_NUM_READS] = {0};
+size_t   analog_ind = 0;
+int light_sensor_read(void);
+int light_sensor_done(void);
+float light_sensor_average(void);
 
-#define BUTTON_PIN 11
+#define BUTTON_PIN          11
 struct button in_button;
 void button_int(void)
 {
   button_update(&in_button, !digitalRead(BUTTON_PIN));
 }
+
+#define NEOPIXEL_PIN        17
+uint8_t brightness = 64;
 
 // Parameter 1 = number of pixels in strip
 // Parameter 2 = Arduino pin number (most are valid)
@@ -27,15 +36,15 @@ void button_int(void)
 //   NEO_GRB     Pixels are wired for GRB bitstream (most NeoPixel products)
 //   NEO_RGB     Pixels are wired for RGB bitstream (v1 FLORA pixels, not v2)
 //   NEO_RGBW    Pixels are wired for RGBW bitstream (NeoPixel RGBW products)
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(8, PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(8, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
 
-void setup() {
+void setup()
+{
   Serial.begin(115200);
 
   strip.begin();
   // Initialize all pixels to 'off'
   strip.show();
-  brightness = 64;
   strip.setBrightness(brightness);
 
   // Set interrupt for 1 ms
@@ -45,9 +54,11 @@ void setup() {
   setTime(5, 10, 0, 0, 0, 0);
   pinMode(BUTTON_PIN, INPUT);
   button_init(&in_button);
+  pinMode(LIGHT_ANALOG_PIN, INPUT);
 }
 
-void loop() {
+void loop()
+{
   // Some example procedures showing how to display to the pixels:
   //rainbow(20);
   //rainbowCycle(20);
@@ -63,8 +74,27 @@ void loop() {
   if (button_was_pressed(&in_button))
   {
     brightness = (brightness + 63) & 0xFF;
-    strip.setBrightness(brightness);
-    Serial.println(brightness);
+    //strip.setBrightness(brightness);
+    //Serial.println(brightness);
+  }
+
+  light_sensor_read();
+  if (light_sensor_done())
+  {
+    float light_sense = light_sensor_average();
+    if (light_sense >= 650.0f)
+    {
+      light_sense = 650.0f;
+    }
+    float light_ratio = light_sense / 650.0f;
+    int out_brightness = (int)((float)brightness * light_ratio);
+    strip.setBrightness(out_brightness);
+
+    Serial.print("(Light sensor, Brightness): (");
+    Serial.print(light_sense);
+    Serial.print(", ");
+    Serial.print(out_brightness);
+    Serial.println(")");
   }
 }
 
@@ -148,3 +178,28 @@ uint32_t Wheel(byte WheelPos) {
   WheelPos -= 170;
   return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
 }
+
+int light_sensor_read(void)
+{
+  analog_reads[analog_ind] = analogRead(LIGHT_ANALOG_PIN);
+  //Serial.println(analog_reads[analog_ind]);
+  analog_ind++;
+}
+
+int light_sensor_done(void)
+{
+  return analog_ind >= LIGHT_NUM_READS;
+}
+
+float light_sensor_average(void)
+{
+  uint32_t sum = 0;
+  for (analog_ind = 0; analog_ind < LIGHT_NUM_READS; analog_ind++)
+  {
+    sum += analog_reads[analog_ind];
+  }
+  float avg = (float)sum / LIGHT_NUM_READS;
+  analog_ind = 0;
+  return avg;
+}
+
