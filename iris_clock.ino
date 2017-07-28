@@ -83,7 +83,7 @@ void loop()
   strip.setBrightness(out_brightness);
 
   Serial.print("(Light sensor, Brightness): (");
-  Serial.print(light_val);
+  Serial.print(light_filt.value);
   Serial.print(", ");
   Serial.print(out_brightness);
   Serial.println(")");
@@ -170,7 +170,7 @@ uint32_t Wheel(byte WheelPos) {
   return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
 }
 
-int light_sensor_update(void)
+float light_sensor_update(void)
 {
   exponential_filter_update(&light_filt, analogRead(LIGHT_ANALOG_PIN));
   //Serial.println(light_filt.value);
