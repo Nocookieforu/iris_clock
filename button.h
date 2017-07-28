@@ -8,7 +8,7 @@ struct button
     int pressed;
 };
 
-void button_init(struct button *b);
+int button_init(struct button *b);
 
 int button_update(struct button *b, int value);
 
