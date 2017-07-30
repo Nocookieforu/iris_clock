@@ -82,48 +82,60 @@ void loop()
   int out_brightness = (int)((float)brightness * light_ratio);
   strip.setBrightness(out_brightness);
 
-  Serial.print("(Light sensor, Brightness): (");
-  Serial.print(light_filt.value);
-  Serial.print(", ");
-  Serial.print(out_brightness);
-  Serial.println(")");
+  //Serial.print("(Light sensor, Brightness): (");
+  //Serial.print(light_filt.value);
+  //Serial.print(", ");
+  //Serial.print(out_brightness);
+  //Serial.println(")");
 }
 
 void display_time(time_t time)
 {
+  rgb colors[3];
+  //colors[0] = color_yellow;
+  //colors[1] = color_red;
+  colors[0] = color_green;
+  //colors[1] = color_teal;
+  colors[1] = color_blue;
+  colors[2] = color_hsv_to_rgb(color_add_hsv(color_rgb_to_hsv(colors[0]),
+                                             color_rgb_to_hsv(colors[1])));
   uint8_t i;
   for (i = 0; i < 8; i++)
   {
     uint8_t hour_bit = (hour(time)   >> i) & 0x1;
     uint8_t min_bit  = (minute(time) >> i) & 0x1;
     uint8_t sec_bit  = (second(time) >> i) & 0x1;
-    struct color pixel_color = {0};
-    if (hour_bit)
-    {
-      pixel_color = add_colors(pixel_color, color_blue);
-    }
-    if (min_bit)
-    {
-      pixel_color = add_colors(pixel_color, color_green);
-    }
+
+    rgb pixel_color = {0};
+    if (hour_bit && min_bit)
+      pixel_color = colors[2];
+    else if (min_bit)
+      pixel_color = colors[0];
+    else if (hour_bit)
+      pixel_color = colors[1];
     /*
     if (sec_bit)
     {
-      pixel_color = add_colors(pixel_color, color_red);
+      pixel_color = color_add_rgb(pixel_color, color_red);
     }
     */
+
+    Serial.print(i);
+    Serial.print(": ");
+    color_hsv_to_string(color_rgb_to_hsv(pixel_color), &str_buf_ptr);
+    Serial.println(str_buf);
     //strip.setPixelColor(i, 255*hour_bit, 255*min_bit, 255*sec_bit);
-    strip.setPixelColor(i, pixel_color.red, pixel_color.green, pixel_color.blue);
+    strip.setPixelColor(i, pixel_color.r, pixel_color.g, pixel_color.b);
   }
 
   // Use LEDs 6 and 7 for seconds
   if (second(time) & 0x8)
-    strip.setPixelColor(6, color_red.red, color_red.green, color_red.blue);
+    strip.setPixelColor(6, colors[1].r, colors[1].g, colors[1].b);
   else
     strip.setPixelColor(6, 0, 0, 0);
 
   if (second(time) & 0x10)
-    strip.setPixelColor(7, color_red.red, color_red.green, color_red.blue);
+    strip.setPixelColor(7, colors[1].r, colors[1].g, colors[1].b);
   else
     strip.setPixelColor(7, 0, 0, 0);
 
