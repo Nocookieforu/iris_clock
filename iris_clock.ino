@@ -12,7 +12,7 @@ extern "C"
 
 // Analog sensor hooked to Teensy LC pin 14
 #define LIGHT_ANALOG_PIN    (A0)
-#define LIGHT_FILT_ALPHA    ((float)0.01)
+#define LIGHT_FILT_ALPHA    ((float)0.05)
 struct exponential_filter light_filt = {0};
 float light_sensor_update(void);
 
@@ -35,6 +35,54 @@ uint8_t brightness = 64;
 //   NEO_RGB     Pixels are wired for RGB bitstream (v1 FLORA pixels, not v2)
 //   NEO_RGBW    Pixels are wired for RGBW bitstream (NeoPixel RGBW products)
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(8, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
+
+#define STR_BUF_LEN     128
+char str_buf[STR_BUF_LEN];
+char *str_buf_ptr = str_buf;
+
+void clear_buf()
+{
+    size_t i;
+    for (i = 0; i < STR_BUF_LEN; i++)
+    {
+        str_buf[i] = '\0';
+    }
+}
+
+void print_str_buf()
+{
+    size_t i;
+    for (i = 0; i < STR_BUF_LEN; i++)
+    {
+        if (str_buf[i] == '\0')
+        {
+            Serial.print("\\0");
+        }
+        else
+        {
+            Serial.print(str_buf[i]);
+        }
+    }
+    Serial.println();
+}
+
+void test_colors()
+{
+    Serial.println("Testing colors!");
+    clear_buf();
+    //rgb in_color = color_yellow;
+    rgb in_color = color_red;
+    int len = color_rgb_to_string(in_color, &str_buf_ptr);
+    //print_str_buf();
+    Serial.println(str_buf);
+    hsv color_conv = color_rgb_to_hsv(in_color);
+    len = color_hsv_to_string(color_conv, &str_buf_ptr);
+    //print_str_buf();
+    Serial.println(str_buf);
+    rgb color_back = color_hsv_to_rgb(color_conv);
+    len = color_rgb_to_string(color_back, &str_buf_ptr);
+    Serial.println(str_buf);
+}
 
 void setup()
 {
@@ -59,6 +107,8 @@ void setup()
 
 void loop()
 {
+  test_colors();
+
   // Some example procedures showing how to display to the pixels:
   //rainbow(20);
   //rainbowCycle(20);
