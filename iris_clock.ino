@@ -92,7 +92,7 @@ void test_colors()
 void switch_colors()
 {
     color_switch++;
-    if (color_switch >= 3)
+    if (color_switch >= 4)
     {
         color_switch = 0;
     }
@@ -110,6 +110,11 @@ void switch_colors()
             colors[0] = color_yellow;
             colors[1] = color_blue;
             break;
+        case 3:
+            colors[0] = color_green;
+            colors[1] = color_red;
+            break;
+
     }
     colors[2] = color_hsv_to_rgb(color_add_hsv(color_rgb_to_hsv(colors[0]),
                                                color_rgb_to_hsv(colors[1])));
@@ -143,7 +148,7 @@ void setup()
 
 void loop()
 {
-  test_colors();
+  //test_colors();
 
   // Some example procedures showing how to display to the pixels:
   //rainbow(20);
@@ -152,7 +157,8 @@ void loop()
   // Increase time by one second
   adjustTime(1);
   // Show time on LEDs
-  display_time(now());
+  //display_time(now());
+  spinning_time(now());
   //delay(1000);
   delay(20);
   //Serial.println(in_button.integrate);
@@ -177,6 +183,32 @@ void loop()
   //Serial.print(", ");
   //Serial.print(out_brightness);
   //Serial.println(")");
+}
+
+void spinning_time(time_t time)
+{
+    uint8_t sec = (second(time) >> 3) & 0x07;
+    hsv base_col = color_rgb_to_hsv(colors[0]);
+
+    uint8_t i;
+    for (i = 0; i < 8; i++)
+    {
+        hsv pre_color = base_col;
+        //pre_color.v = 16 * i + 128;
+        pre_color.v = 32 * i;
+        if (i == sec)
+        {
+            pre_color = color_add_hsv(pre_color, color_rgb_to_hsv(colors[1]));
+            rgb pixel_color = color_hsv_to_rgb(pre_color);
+            Serial.print(i);
+            Serial.print(": ");
+            color_hsv_to_string(color_rgb_to_hsv(pixel_color), &str_buf_ptr);
+            Serial.println(str_buf);
+        }
+        rgb pixel_color = color_hsv_to_rgb(pre_color);
+        strip.setPixelColor(i, pixel_color.r, pixel_color.g, pixel_color.b);
+    }
+    strip.show();
 }
 
 void display_time(time_t time)

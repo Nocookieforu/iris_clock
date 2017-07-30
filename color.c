@@ -18,7 +18,10 @@ rgb color_add_rgb(rgb one, rgb two)
 
 hsv color_add_hsv(hsv one, hsv two)
 {
-    uint16_t hue = (one.h + two.h) >> 1;
+    uint16_t val_sum = one.v + two.v;
+    uint16_t hue = (one.h * one.v +
+                    two.h * two.v) / val_sum;
+    //uint16_t hue = (one.h + two.h) >> 1;
     uint16_t sat = (one.s + two.s) >> 1;
     uint16_t val = (one.v + two.v) >> 1;
 
