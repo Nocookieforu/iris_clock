@@ -158,9 +158,10 @@ void loop()
   adjustTime(1);
   // Show time on LEDs
   //display_time(now());
-  spinning_time(now());
+  //spinning_time(now());
+  mixing_colors_time(now());
   //delay(1000);
-  delay(20);
+  delay(50);
   //Serial.println(in_button.integrate);
 
   if (button_was_pressed(&in_button))
@@ -183,6 +184,27 @@ void loop()
   //Serial.print(", ");
   //Serial.print(out_brightness);
   //Serial.println(")");
+}
+
+void mixing_colors_time(time_t time)
+{
+    uint8_t sec = (second(time) >> 2) & 0x0F;
+    hsv base_col = color_rgb_to_hsv(colors[0]);
+
+    uint8_t i;
+    for (i = 0; i < 8; i++)
+    {
+        hsv pre_color = base_col;
+        pre_color.v = 32 * i;
+
+        hsv mix_color = color_rgb_to_hsv(colors[1]);
+        mix_color.v = 16 * sec;
+        pre_color = color_add_hsv(pre_color, mix_color);
+
+        rgb pixel_color = color_hsv_to_rgb(pre_color);
+        strip.setPixelColor(i, pixel_color.r, pixel_color.g, pixel_color.b);
+    }
+    strip.show();
 }
 
 void spinning_time(time_t time)
