@@ -18,10 +18,15 @@ float light_sensor_update(void);
 
 #define BUTTON_PIN          11
 struct button in_button;
+#define COLOR_BUTTON_PIN    8
+struct button color_button;
 void button_int(void)
 {
-  button_update(&in_button, !digitalRead(BUTTON_PIN));
+  button_update(&in_button,    !digitalRead(BUTTON_PIN));
+  button_update(&color_button, !digitalRead(COLOR_BUTTON_PIN));
 }
+rgb colors[3];
+int color_switch = 0;
 
 #define NEOPIXEL_PIN        17
 uint8_t brightness = 64;
@@ -84,6 +89,32 @@ void test_colors()
     Serial.println(str_buf);
 }
 
+void switch_colors()
+{
+    color_switch++;
+    if (color_switch >= 3)
+    {
+        color_switch = 0;
+    }
+    switch (color_switch)
+    {
+        case 0:
+            colors[0] = color_green;
+            colors[1] = color_blue;
+            break;
+        case 1:
+            colors[0] = color_yellow;
+            colors[1] = color_red;
+            break;
+        case 2:
+            colors[0] = color_yellow;
+            colors[1] = color_blue;
+            break;
+    }
+    colors[2] = color_hsv_to_rgb(color_add_hsv(color_rgb_to_hsv(colors[0]),
+                                               color_rgb_to_hsv(colors[1])));
+}
+
 void setup()
 {
   Serial.begin(115200);
@@ -100,7 +131,12 @@ void setup()
   setTime(5, 10, 0, 0, 0, 0);
   pinMode(BUTTON_PIN, INPUT);
   button_init(&in_button);
+  pinMode(COLOR_BUTTON_PIN, INPUT);
+  button_init(&color_button);
   pinMode(LIGHT_ANALOG_PIN, INPUT);
+
+  color_switch = 3;
+  switch_colors();
 
   exponential_filter_init(&light_filt, LIGHT_FILT_ALPHA);
 }
@@ -127,6 +163,10 @@ void loop()
     //strip.setBrightness(brightness);
     //Serial.println(brightness);
   }
+  if (button_was_pressed(&color_button))
+  {
+    switch_colors();
+  }
 
   float light_ratio = light_sensor_update();
   int out_brightness = (int)((float)brightness * light_ratio);
@@ -141,14 +181,6 @@ void loop()
 
 void display_time(time_t time)
 {
-  rgb colors[3];
-  //colors[0] = color_yellow;
-  //colors[1] = color_red;
-  colors[0] = color_green;
-  //colors[1] = color_teal;
-  colors[1] = color_blue;
-  colors[2] = color_hsv_to_rgb(color_add_hsv(color_rgb_to_hsv(colors[0]),
-                                             color_rgb_to_hsv(colors[1])));
   uint8_t i;
   for (i = 0; i < 8; i++)
   {
