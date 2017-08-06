@@ -1,3 +1,9 @@
 EESchema-DOCLIB  Version 2.0
 #
+$CMP MCP9700
+D Low-Power Linear Active Thermistor
+K temp, temperature
+F http://ww1.microchip.com/downloads/en/DeviceDoc/20001942G.pdf
+$ENDCMP
+#
 #End Doc Library
