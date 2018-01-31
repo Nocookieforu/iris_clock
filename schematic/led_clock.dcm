@@ -11,4 +11,8 @@ D STM32 Nucleo 32
 K Nucleo 32
 $ENDCMP
 #
+$CMP SN74LVC1T45
+D Single-Bit Dual-Supply Bus Transceiver With Configurable Voltage
+$ENDCMP
+#
 #End Doc Library
