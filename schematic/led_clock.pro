@@ -1,4 +1,4 @@
-update=8/6/2017 1:41:35 PM
+update=2/13/2018 6:49:04 PM
 version=1
 last_client=kicad
 [pcbnew]
@@ -59,3 +59,13 @@ LibName29=valves
 LibName30=led_clock
 [general]
 version=1
+[schematic_editor]
+version=1
+PageLayoutDescrFile=
+PlotDirectoryName=images
+SubpartIdSeparator=0
+SubpartFirstId=65
+NetFmtName=
+SpiceForceRefPrefix=0
+SpiceUseNetNumbers=0
+LabSize=60
