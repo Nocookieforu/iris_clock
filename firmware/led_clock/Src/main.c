@@ -132,6 +132,8 @@ int main(void)
   leds[curr_led].s = 255;
   leds[curr_led].v = 255;
   
+  size_t led_count = 0;
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -148,6 +150,8 @@ int main(void)
       HAL_SPI_Transmit(&hspi1, spi_write_data, spi_write_size, 100000);
       
       // Change colors
+      // Write red to single LED in chain
+      /*
       leds[curr_led].h = 0;
       leds[curr_led].s = 0;
       leds[curr_led].v = 0;
@@ -156,10 +160,20 @@ int main(void)
           curr_led -= NUM_LEDS;
       leds[curr_led].h = 0;
       leds[curr_led].s = 255;
-      leds[curr_led].v = 255;
+      leds[curr_led].v = 128;
+      */
+
+      // Send rainbow around chain
+      curr_led++;
+      for (led_count = 0; led_count < NUM_LEDS; led_count++)
+      {
+          leds[led_count].h = (curr_led + led_count * 4);
+          leds[led_count].s = 255;
+          leds[led_count].v = 127;
+      }
       
       volatile int i;
-      for (i = 0; i < 100; i++)
+      for (i = 0; i < 10; i++)
       {
           systick_interrupt_flag = 0;
           while (systick_interrupt_flag == 0) { }
@@ -209,7 +223,7 @@ void SystemClock_Config(void)
   }
 
   PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_LPTIM2|RCC_PERIPHCLK_ADC;
-  PeriphClkInit.Lptim2ClockSelection = RCC_LPTIM2CLKSOURCE_PCLK;
+  PeriphClkInit.Lptim2ClockSelection = RCC_LPTIM2CLKSOURCE_HSI;
   PeriphClkInit.AdcClockSelection = RCC_ADCCLKSOURCE_SYSCLK;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
@@ -350,7 +364,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOH_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_SET);
 
   /*Configure GPIO pin : VCP_TX_Pin */
   GPIO_InitStruct.Pin = VCP_TX_Pin;
@@ -376,8 +390,7 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : PA8 */
   GPIO_InitStruct.Pin = GPIO_PIN_8;
-  //GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
